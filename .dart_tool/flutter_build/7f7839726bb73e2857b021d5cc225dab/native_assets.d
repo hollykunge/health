@@ -1,0 +1,1 @@
+ D:\\WorkSpace\\baidu_ocr_plugin\\health\\.dart_tool\\flutter_build\\7f7839726bb73e2857b021d5cc225dab\\native_assets.yaml: 
