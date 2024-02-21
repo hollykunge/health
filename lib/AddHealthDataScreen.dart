@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'OcrHttp.dart'; // 确保这个文件中定义了uploadFile函数
 
 class AddHealthDataScreen extends StatefulWidget {
   @override
@@ -7,8 +8,48 @@ class AddHealthDataScreen extends StatefulWidget {
 }
 
 class _AddHealthDataScreenState extends State<AddHealthDataScreen> {
-  final TextEditingController _typeController = TextEditingController();
-  final TextEditingController _valueController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
+  String _extractedText = ''; // 定义_extractedText变量来存储提取的文本
+
+  void _pickImage() async {
+    final XFile? photo = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxHeight: 1080,
+      maxWidth: 1080,
+    );
+    if (photo != null) {
+      setState(() => _isUploading = true);
+      _uploadPhoto(photo);
+    }
+  }
+
+  void _uploadPhoto(XFile photo) async {
+    try {
+      final result = await uploadFile(photo);
+      setState(() {
+        _isUploading = false;
+        _extractedText = result;
+      });
+    } catch (error) {
+      setState(() {
+        _isUploading = false;
+        _extractedText = 'Error: $error'; // 保存错误信息
+      });
+    }
+  }
+
+  Widget _buildResultCard() {
+    return Card(
+      margin: EdgeInsets.all(8.0),
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: SelectableText(_extractedText, // 使用SelectableText允许用户选择文本
+          style: TextStyle(height: 1.5),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,25 +58,17 @@ class _AddHealthDataScreenState extends State<AddHealthDataScreen> {
       body: Padding(
         padding: EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            TextField(
-              controller: _typeController,
-              decoration: InputDecoration(labelText: '数据类型'),
-            ),
-            TextField(
-              controller: _valueController,
-              decoration: InputDecoration(labelText: '数据值'),
-            ),
-            SizedBox(height: 20),
+            if (_isUploading) CircularProgressIndicator(),
+            if (_extractedText.isNotEmpty) _buildResultCard(),
             ElevatedButton(
-              onPressed: () {
-                // 在这里实现添加数据的逻辑
-              },
-              child: Text('添加'),
+              onPressed: _pickImage,
+              child: Text('打开相机'),
               style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: Colors.blue, // 文字颜色
+                foregroundColor: Colors.white, backgroundColor: Theme.of(context).primaryColor,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18.0), // 圆角
+                  borderRadius: BorderRadius.circular(18.0),
                 ),
               ),
             ),
